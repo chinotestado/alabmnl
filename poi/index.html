@@ -463,6 +463,24 @@ body::after {
 .dec-date { font-size: 9px; color: var(--muted2); white-space: nowrap; flex-shrink: 0; font-family: 'DM Mono', monospace; }
 .dec-rationale { font-size: 12px; color: var(--muted); line-height: 1.6; }
 .dec-source { font-size: 9px; color: var(--muted2); margin-top: 6px; font-family: 'DM Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase; }
+#upload-btn:hover { border-color: var(--fire); color: var(--fire); }
+
+.file-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; padding: 3px 8px; border-radius: 1px;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--muted); font-family: 'DM Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.file-chip-remove {
+  cursor: pointer; color: var(--muted2); font-size: 12px;
+  line-height: 1; transition: color 0.1s;
+}
+.file-chip-remove:hover { color: var(--fire); }
+
+.file-chip.processing { border-color: var(--fire); color: var(--fire); }
+
 #footer {
   padding: 7px 20px; border-top: 1px solid var(--border); background: var(--black);
   display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted2);
@@ -474,18 +492,18 @@ body::after {
 </head>
 <body>
 
-<!-- API KEY GATE -->
+<!-- PASSWORD GATE -->
 <div id="gate">
   <div id="gate-inner">
     <div id="gate-mark">POI</div>
-    <div id="gate-sub">Alab MNL · Strategic AI · Beta</div>
-    <div id="gate-label">Anthropic API Key</div>
-    <div id="gate-error">Invalid key — please check and try again.</div>
-    <input id="gate-input" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+    <div id="gate-sub">Alab MNL · Conviction AI · Beta</div>
+    <div id="gate-label">Access Password</div>
+    <div id="gate-error">Wrong password — please try again.</div>
+    <input id="gate-input" type="password" placeholder="Enter password..." autocomplete="off" spellcheck="false">
     <button id="gate-btn" onclick="unlock()">Ignite Poi &#x279C;</button>
     <div id="gate-note">
-      Your API key is used only in this session and never stored.<br>
-      Get yours at console.anthropic.com
+      For Alab MNL internal use only.<br>
+      Session only — cleared on close.
     </div>
   </div>
 </div>
@@ -497,7 +515,7 @@ body::after {
       <div id="brand">
         <div id="brand-mark">POI</div>
         <div id="brand-divider"></div>
-        <div id="brand-name">Alab MNL · Strategic AI</div>
+        <div id="brand-name">Alab MNL · Conviction AI</div>
       </div>
       <div id="header-controls">
         <div class="badge badge-fire">Beta</div>
@@ -514,8 +532,15 @@ body::after {
   <div id="body">
     <div id="chat">
       <div id="messages"></div>
+      <div id="file-preview" style="display:none;padding:8px 16px 0;background:var(--black);">
+        <div id="file-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
       <div id="input-wrap">
-        <textarea id="inp" rows="1" placeholder="Share your concept or brief — Poi will interrogate it..."></textarea>
+        <label id="upload-btn" title="Attach file" style="width:36px;height:36px;border:1px solid var(--border);border-radius:1px;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;transition:all 0.15s;">
+          📎
+          <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp" multiple style="display:none;" onchange="handleFiles(this.files)">
+        </label>
+        <textarea id="inp" rows="1" placeholder="Share your concept or brief — or attach a deck, storyboard, or brief..."></textarea>
         <button id="send" onclick="poiSend()" title="Send">&#x279C;</button>
       </div>
     </div>
@@ -557,33 +582,121 @@ const STAGES = [
   { id:'media',      label:'Media Implementation', short:'MI', bg:'rgba(60,130,200,0.1)', border:'rgba(60,130,200,0.4)', text:'#6AABDF' },
 ];
 
-const SYSTEM = `You are Poi, Alab MNL's internal operational support AI. Alab MNL is a creative advertising agency in the Philippines — the name comes from "alab," the Filipino word for fire. You exist to ensure that only ideas worth burning actually burn.
+const SYSTEM = `You are Poi, Alab MNL's internal operational support AI. Alab MNL is a creative advertising agency in the Philippines. You exist to ensure only ideas worth burning actually burn.
 
 You have exactly three functions. Never go beyond them.
 
-THE COMBUSTION FRAMEWORK — your primary evaluation tool:
-Fire requires Heat, Fuel, and O2. Remove any one and combustion stops completely.
-- HEAT: The real, specific, ownable consumer or category tension that makes the idea necessary. Borrowed heat applies to any brand. Real heat belongs to this brief only.
-- FUEL: The insight deep enough to sustain the idea under pressure. Strong fuel holds when challenged. Weak fuel sounds smart but doesn't change how you see the problem.
-- O2: The ecosystem conditions that let the idea breathe beyond paid media — channels, partners, cultural timing, audience behavior. Without O2 the fire dies when the budget stops.
-- ALAB: The inevitable output. A burning idea couldn't have existed any other way.
+FUNCTION 01 — STRESS-TEST
+Purpose: Strengthen conviction. Before an idea reaches a client, Poi interrogates it until only the conviction that can survive scrutiny remains.
 
-THREE QUESTIONS YOU ALWAYS ANSWER — let them emerge naturally as verdicts at the end, never as a checklist at the start:
-1. DOES IT BURN? — Burns / Smolders / Doesn't ignite
-2. IS IT WORTH THE BURN? — Worth it / Conditional / Not worth it
-3. WILL IT LINGER? — Lingers / Fades / Disappears
+The Combustion Framework is the diagnostic tool of Stress-Test — and only Stress-Test:
+- HEAT (the reality and ownership of tension) — is this tension genuine, and does it belong to this brand specifically? Real Heat is ownable — no other brand can stand in this exact intersection of brand and culture. Borrowed Heat could be claimed by any brand in the category.
+- FUEL (the depth of insight) — is the truth behind the idea deep enough to sustain it under pressure? Strong Fuel holds when challenged, feels dangerous to say out loud, and couldn't have come from the brief alone. Weak Fuel sounds smart but collapses when questioned.
+- O2 (the readiness of ecosystem conditions) — are the conditions in place for the idea to ignite and sustain at the right scale? This includes media investment, cultural timing, platform fit, partner availability, and audience receptivity. Strong O2 means everything is in place. Weak O2 means the conditions aren't there — regardless of how good the idea is.
+- ALAB is the inevitable output — the idea that could not have existed any other way.
+- AUDIENCE SIMULATION — how will the Filipino target audience actually receive this idea? This stress-tests Heat, Fuel, and O2 against real people. It surfaces misreadings, unintended interpretations, demographic blind spots, and whether the emotional response matches what the brand intends.
 
-FUNCTION 01 — STRESS-TEST: Apply the Combustion Framework sequentially. Surface external threats and internal weaknesses. Simulate Filipino audience reaction. Assess effort-to-impact. End with three labeled verdicts and one recommended action.
+STRESS-TEST RESPONSE FORMAT — follow this exactly, every time:
 
-FUNCTION 02 — BENCHMARK: Evaluate against Cannes Lions, Adfest, and Philippine standards. Answer: what makes this worth awarding, what stops it from winning. End with three labeled verdicts and one recommended action.
+DOES IT BURN? [Burns / Smolders / Doesn't ignite]
+[One sentence summative verdict]
+HEAT (the reality and ownership of tension): [one sentence assessment]
+FUEL (the depth of insight): [one sentence assessment]
+O2 (the readiness of ecosystem conditions): [one sentence assessment]
+AUDIENCE (how the Filipino target will likely receive this): [two sentences maximum — anticipated reaction, any misreadings or blind spots]
 
-FUNCTION 03 — DECISION LOG: Capture rationale behind strategic and creative decisions — what was decided, why, and what alternative was rejected.
+You MUST include the parenthetical definition after each element label exactly as shown above. Never drop the parenthetical. It is part of the output format.
 
-RULES: Confidential — refer to clients by category only. Be honest and specific. One recommended action. Fire doesn't negotiate. Speak like a senior strategist and creative director.`;
+IS IT WORTH THE BURN? [Worth it / Conditional / Not worth it]
+[One sentence summative verdict]
+RISK: [one sentence on operational pressure, dependencies, exposure]
+REWARD: [one sentence on realistic return — brand impact, awards, effectiveness]
+
+WILL THE BURN LINGER? [Lingers / Fades / Disappears]
+[One sentence summative verdict]
+[Two to three sentences expanding on O2 — what ecosystem conditions exist or are missing that will determine whether the idea outlasts the media budget]
+
+WHAT COULD KILL THE FLAME?
+[One sentence naming the single most dangerous threat]
+- [External threat 1 + one sentence explanation]
+- [External threat 2 + one sentence explanation]
+- [External threat 3 + one sentence explanation, if genuinely present]
+- [External threat 4 + one sentence explanation, if genuinely present]
+Only list threats that are real. Do not pad.
+
+ACTION
+[One specific, concrete next step the team should take]
+
+Maximum 300 words total. Sharp, direct, no fluff.
+
+FUNCTION 02 — BENCHMARK
+Purpose: Promote creative excellence. Poi holds the idea against the highest creative standard in the world and tells you honestly where it falls short.
+
+The Combustion Framework does NOT apply here. Benchmark uses its own four questions:
+
+BENCHMARK RESPONSE FORMAT — follow exactly:
+
+WORTH AWARDING? [Yes / With refinement / Not yet]
+[One sentence summative verdict]
+[One to two sentences on what specifically makes this worth awarding]
+
+CREATIVE AMBITION? [Exceeds category / Meets category / Below category]
+[One sentence summative verdict]
+[One to two sentences comparing to Cannes/Adfest standard in this category]
+
+WILL IT BE REFERENCED? [Beyond the campaign / During the campaign / Forgotten after]
+[One sentence summative verdict]
+[One to two sentences on cultural longevity and whether this idea adds to or merely interrupts the conversation]
+
+WHAT STOPS IT FROM WINNING?
+[One sentence naming the single biggest creative gap]
+[One to two sentences on what specifically needs to change]
+
+ACTION
+[One specific change that would move it closer to winning]
+
+Maximum 250 words total. Sharp, direct, no fluff.
+
+FUNCTION 03 — DECISION LOG
+Purpose: Know where conviction collapses. Every campaign has moments where a brave idea becomes a safe one. The Decision Log captures those moments — what was decided, why, and what alternative was rejected — so the agency can see exactly where and why the fire went out.
+
+RULES FOR ALL FUNCTIONS:
+- Treat all client information as strictly confidential. Refer to clients by category only.
+- Be honest, direct, and specific. Vague feedback produces weak work.
+- Decline anything outside the three functions clearly and redirect.
+- Fire doesn't negotiate. The verdict is clear.
+
+TONE:
+You are direct, clever, and occasionally snarky — but never cruel and never vague. Think of yourself as the smartest, most unsparing person in the room. The one who says what everyone else is thinking but won't say out loud.
+
+Use sarcasm sparingly and surgically — only when an idea deserves it and only when it makes the point faster than a straight line would. Never sarcastic for the sake of it. Always clever.
+
+You do not cushion bad news. You do not say "great start" before listing everything wrong with it. You do not perform enthusiasm. If the idea smolders, say it smolders and say exactly why — with wit if the situation earns it, without if it doesn't.
+
+Your goal is not to make the team feel good. Your goal is to make the work better. Those are not the same thing.`;
 
 const SYS = {
   stress: SYSTEM + `\n\nACTIVE: STRESS-TEST. Combustion Framework first, then external threats, internal weaknesses, audience simulation, effort-to-impact. End with three clearly labeled verdicts and one recommended action.`,
-  bench: SYSTEM + `\n\nACTIVE: BENCHMARK. Evaluate against Cannes Lions, Adfest, and Philippine standards. What makes it worth awarding, what stops it from winning. End with three clearly labeled verdicts and one recommended action.`
+  bench: SYSTEM + `\n\nACTIVE: BENCHMARK. You are evaluating this idea against the world's best creative work — Cannes Lions, Adfest, and Philippine standards. Answer the four burn questions through the lens of global creative excellence, not operational risk.
+
+CRITICAL RESPONSE FORMAT — follow this exactly:
+
+FIRST — the four verdicts through the benchmark lens:
+---
+DOES IT BURN? [Burns / Smolders / Doesn't ignite] — does it meet global award standard?
+IS IT WORTH THE BURN? [Worth it / Conditional / Not worth it] — is the creative ambition genuinely award-worthy?
+WILL IT LINGER? [Lingers / Fades / Disappears] — will it be referenced beyond the campaign period?
+WHAT COULD KILL THE FIRE? [name the single thing stopping it from winning] — one sentence
+→ ACTION: one specific change that would move it closer to winning
+---
+
+THEN — benchmark reasoning, one sentence each:
+AWARD POTENTIAL: [what specifically makes this worth awarding]
+CREATIVE GAP: [the one thing holding it back from winning]
+CATEGORY STANDARD: [how it compares to what wins in this category at Cannes or Adfest]
+PHILIPPINE STANDARD: [how it leads or follows the local creative conversation]
+
+Keep full response under 250 words. Do NOT start with analysis. Start ONLY with the verdict block.`
 };
 
 const WELCOME = {
@@ -599,35 +712,18 @@ let formOpen = false;
 let activeFilter = 'all';
 let decId = 1;
 
-async function unlock() {
-  const key = document.getElementById('gate-input').value.trim();
-  if (!key || !key.startsWith('sk-ant-')) {
+function unlock() {
+  const input = document.getElementById('gate-input').value.trim();
+  if (input !== 'AIL@b2026') {
     document.getElementById('gate-error').style.display = 'block';
+    document.getElementById('gate-input').value = '';
     return;
   }
-  document.getElementById('gate-btn').textContent = 'Checking...';
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] })
-    });
-    if (res.ok) {
-      API_KEY = key;
-      document.getElementById('gate').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
-      buildStageSelect();
-      updateCount();
-      setTab('stress');
-    } else {
-      document.getElementById('gate-error').style.display = 'block';
-      document.getElementById('gate-btn').textContent = 'Ignite Poi →';
-    }
-  } catch (e) {
-    document.getElementById('gate-error').textContent = 'Connection failed — check your network.';
-    document.getElementById('gate-error').style.display = 'block';
-    document.getElementById('gate-btn').textContent = 'Ignite Poi →';
-  }
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  buildStageSelect();
+  updateCount();
+  setTab('stress');
 }
 
 document.getElementById('gate-input').addEventListener('keydown', e => {
@@ -700,7 +796,14 @@ function renderChat() {
     history[tab].forEach((m, i) => {
       const div = document.createElement('div');
       div.className = `msg ${m.role === 'user' ? 'u' : 'a'}`;
-      const txt = m.content.replace(/\n/g, '<br>');
+      const txt = m.content
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/^#{3}\s(.+)$/gm,'<span style="font-size:11px;letter-spacing:2px;color:var(--muted);font-family:DM Mono,monospace;text-transform:uppercase">$1</span>')
+        .replace(/^#{2}\s(.+)$/gm,'<span style="font-size:12px;letter-spacing:2px;color:#E8007D;font-family:DM Mono,monospace;text-transform:uppercase;font-weight:600">$1</span>')
+        .replace(/^---$/gm,'<hr style="border:none;border-top:1px solid #2E2E2E;margin:8px 0">')
+        .replace(/^→\s/gm,'<span style="color:#E8007D">→</span> ')
+        .replace(/\n/g,'<br>');
       if (m.role === 'user') {
         div.innerHTML = `<div class="bubble">${txt}</div><div class="meta">You</div>`;
       } else {
@@ -748,6 +851,48 @@ function showLoader() {
   msgs.scrollTop = msgs.scrollHeight;
 }
 
+let attachedFiles = [];
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    const chip = addFileChip(file.name);
+    chip.classList.add('processing');
+
+    reader.onload = (e) => {
+      const base64 = e.target.result.split(',')[1];
+      const mediaType = file.type || 'application/pdf';
+      attachedFiles.push({ name: file.name, base64, mediaType, type: file.type.startsWith('image/') ? 'image' : 'document' });
+      chip.classList.remove('processing');
+      chip.style.borderColor = 'rgba(232,0,125,0.4)';
+      chip.style.color = '#E8007D';
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('file-input').value = '';
+}
+
+function addFileChip(name) {
+  const preview = document.getElementById('file-preview');
+  const list = document.getElementById('file-list');
+  preview.style.display = 'block';
+
+  const chip = document.createElement('div');
+  chip.className = 'file-chip';
+  chip.id = 'chip-' + name.replace(/[^a-z0-9]/gi, '');
+  chip.innerHTML = `<span>📄 ${name.length > 20 ? name.substring(0,20)+'...' : name}</span><span class="file-chip-remove" onclick="removeFile('${name}', this.parentElement)">×</span>`;
+  list.appendChild(chip);
+  return chip;
+}
+
+function removeFile(name, chip) {
+  attachedFiles = attachedFiles.filter(f => f.name !== name);
+  chip.remove();
+  if (document.getElementById('file-list').children.length === 0) {
+    document.getElementById('file-preview').style.display = 'none';
+  }
+}
+
 async function poiSend() {
   const inp = document.getElementById('inp');
   const txt = inp.value.trim();
@@ -757,7 +902,23 @@ async function poiSend() {
   loading = true;
   document.getElementById('send').disabled = true;
   renderChat(); showLoader();
-  const apiMsgs = history[tab].map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
+  // Build messages with file attachments for the latest user message
+  const apiMsgs = history[tab].map((m, i) => {
+    if (m.role === 'user' && i === history[tab].length - 1 && attachedFiles.length > 0) {
+      const content = [];
+      attachedFiles.forEach(f => {
+        if (f.type === 'image') {
+          content.push({ type: 'image', source: { type: 'base64', media_type: f.mediaType, data: f.base64 } });
+        } else {
+          content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.base64 } });
+        }
+      });
+      content.push({ type: 'text', text: m.content });
+      return { role: 'user', content };
+    }
+    return { role: m.role === 'user' ? 'user' : 'assistant', content: m.content };
+  });
+
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -767,7 +928,7 @@ async function poiSend() {
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1200, system: SYS[tab], messages: apiMsgs })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2000, system: SYS[tab], messages: apiMsgs })
     });
     const data = await res.json();
     const reply = data.content && data.content[0] ? data.content[0].text : 'Something went wrong. Please try again.';
@@ -779,6 +940,10 @@ async function poiSend() {
   if (loader) loader.remove();
   loading = false;
   document.getElementById('send').disabled = false;
+  // Clear attachments after sending
+  attachedFiles = [];
+  document.getElementById('file-list').innerHTML = '';
+  document.getElementById('file-preview').style.display = 'none';
   renderChat();
 }
 
